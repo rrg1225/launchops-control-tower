@@ -46,6 +46,7 @@ npm run start # serve API and built frontend
 | `GET` | `/api/health` | Service health |
 | `GET` | `/api/metrics` | Portfolio readiness metrics |
 | `GET` | `/api/metrics/runtime` | Request counters and uptime |
+| `GET` | `/api/metrics/scorecard` | Operational readiness score and checks |
 | `GET` | `/api/launches` | Filterable launch list |
 | `POST` | `/api/launches` | Create launch, requires `operator` or `admin` |
 | `POST` | `/api/launches/:id/approvals` | Approve gate, requires `admin` |
