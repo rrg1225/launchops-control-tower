@@ -106,8 +106,9 @@ export default function App() {
       <section className="metric-grid">
         <Metric label="Launches" value={metrics?.total ?? "-"} />
         <Metric label="Critical" value={metrics?.critical ?? "-"} />
+        <Metric label="Blocked" value={metrics?.blockedLaunches ?? "-"} />
+        <Metric label="Approval debt" value={metrics?.approvalDebt ?? "-"} />
         <Metric label="Average risk" value={metrics?.averageRisk ?? "-"} />
-        <Metric label="Owners" value={owners.length || "-"} />
       </section>
 
       <section className="workspace">
@@ -144,6 +145,7 @@ export default function App() {
               </div>
               <div className="detail-grid">
                 <span>Target {launch.targetDate}</span>
+                <span>{launch.scheduleRisk} schedule</span>
                 <span>{launch.openTasks} open tasks</span>
                 <span>{launch.pendingApprovals} pending approvals</span>
               </div>
@@ -182,6 +184,10 @@ export default function App() {
         <div className="panel">
           <h2>Stage breakdown</h2>
           <Breakdown data={metrics?.byStage} />
+        </div>
+        <div className="panel">
+          <h2>Schedule risk</h2>
+          <Breakdown data={metrics?.byScheduleRisk} />
         </div>
         <div className="panel">
           <h2>Audit trail</h2>

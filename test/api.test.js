@@ -26,7 +26,10 @@ test("serves portfolio metrics and security headers", async (t) => {
 
   const metrics = await fetch(`${baseUrl}/api/metrics`);
   assert.equal(metrics.status, 200);
-  assert.ok((await metrics.json()).total >= 3);
+  const metricBody = await metrics.json();
+  assert.ok(metricBody.total >= 3);
+  assert.ok("approvalDebt" in metricBody);
+  assert.ok("byScheduleRisk" in metricBody);
 });
 
 test("enforces role-based launch creation and approval", async (t) => {
@@ -57,4 +60,17 @@ test("enforces role-based launch creation and approval", async (t) => {
   });
   assert.equal(approved.status, 200);
   assert.equal((await approved.json()).pendingApprovals, 0);
+});
+
+test("exposes an operational scorecard", async (t) => {
+  const tempDir = await mkdtemp(join(tmpdir(), "launchops-"));
+  t.after(() => rm(tempDir, { recursive: true, force: true }));
+  const { server, baseUrl } = await startServer(join(tempDir, "data.json"));
+  t.after(() => server.close());
+
+  const response = await fetch(`${baseUrl}/api/metrics/scorecard`);
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.grade, "A");
+  assert.ok(body.checks.some((check) => check.id === "request_correlation"));
 });

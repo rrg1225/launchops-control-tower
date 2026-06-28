@@ -25,13 +25,23 @@ export function readinessTier(launch) {
 export function enrichLaunch(launch) {
   const openTasks = launch.tasks.filter((task) => task.status !== "done").length;
   const pendingApprovals = launch.approvals.filter((approval) => approval.status !== "approved").length;
+  const scheduleRisk = scheduleRiskBand(launch);
   return {
     ...launch,
     riskScore: riskScore(launch),
     readinessTier: readinessTier(launch),
+    scheduleRisk,
     openTasks,
     pendingApprovals
   };
+}
+
+export function scheduleRiskBand(launch) {
+  const daysToLaunch = Math.ceil((Date.parse(launch.targetDate) - Date.now()) / 86400000);
+  if (daysToLaunch < 0) return "overdue";
+  if (daysToLaunch <= 7 && Number(launch.blockers || 0) > 0) return "compressed";
+  if (daysToLaunch <= 21) return "near-term";
+  return "healthy";
 }
 
 export async function createStore(filePath) {
@@ -128,11 +138,15 @@ export async function createStore(filePath) {
 
     async metrics() {
       const launches = (await this.listLaunches()).map(enrichLaunch);
+      const approvalDebt = launches.reduce((sum, launch) => sum + launch.pendingApprovals, 0);
       return {
         total: launches.length,
         critical: launches.filter((launch) => launch.readinessTier === "Critical").length,
+        blockedLaunches: launches.filter((launch) => Number(launch.blockers || 0) > 0).length,
+        approvalDebt,
         averageRisk: launches.length ? Math.round(launches.reduce((sum, launch) => sum + launch.riskScore, 0) / launches.length) : 0,
         byStage: groupCount(launches, "stage"),
+        byScheduleRisk: groupCount(launches, "scheduleRisk"),
         byOwner: groupCount(launches, "owner"),
         topRisks: launches.slice(0, 3)
       };
